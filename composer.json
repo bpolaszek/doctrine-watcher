@@ -1,0 +1,43 @@
+{
+    "name": "bentools/doctrine-watcher",
+    "description": "Watch changes in your Doctrine entities to let you trigger custom events.",
+    "keywords": ["doctrine", "orm", "watcher", "changeset", "entity", "watch", "change", "changes", "entities"],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Beno!t POLASZEK",
+            "email": "bpolaszek@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1",
+        "doctrine/orm": "~2.5",
+        "bentools/iterable-functions": "~1.0"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^4.1",
+        "matthiasnoback/doctrine-orm-test-service-provider": "^3.0",
+        "phpunit/phpunit": "^6.0",
+        "satooshi/php-coveralls": "@stable",
+        "squizlabs/php_codesniffer": "@stable"
+    },
+    "autoload": {
+        "psr-4": {
+            "BenTools\\DoctrineWatcher\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BenTools\\DoctrineWatcher\\Tests\\": "tests"
+        },
+        "files": [
+            "vendor/symfony/var-dumper/Resources/functions/dump.php"
+        ]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
