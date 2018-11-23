@@ -29,8 +29,16 @@ $eventManager->addEventSubscriber($watcher);
 /**
  * Watch for changes on the $email property for the User class
  */
-$watcher->watch(User::class, 'email', function (PropertyChangeset $changeset) {
-    $user = $changeset->getEntity();
+$watcher->watch(User::class, 'email', function (
+    PropertyChangeset $changeset,
+    string $operationType,
+    User $user
+) {
+
+    if (!$changeset->hasChanges()) {
+        return;
+    }
+
     vprintf('Changed email from %s to %s for user %s' . PHP_EOL, [
         $changeset->getOldValue(),
         $changeset->getNewValue(),
@@ -41,26 +49,30 @@ $watcher->watch(User::class, 'email', function (PropertyChangeset $changeset) {
 /**
  * Watch for changes on the $roles property for the User class
  */
-$watcher->watch(User::class, 'roles', function (PropertyChangeset $changeset) {
+$watcher->watchIterable(User::class, 'roles', function (
+    PropertyChangeset $changeset, 
+    string $operationType, 
+    User $user
+) {
 
-    if (!$changeset->hasChanges()) {
+    if ($changeset::INSERT === $operationType) {
         return;
     }
 
-    $user = $changeset->getEntity();
     if ($changeset->hasAdditions()) {
         vprintf('Roles %s were granted for user %s' . PHP_EOL, [
             implode(', ', $changeset->getAdditions()),
             $user->getName(),
         ]);
     }
+
     if ($changeset->hasRemovals()) {
         vprintf('Roles %s were revoked for user %s' . PHP_EOL, [
             implode(', ', $changeset->getRemovals()),
             $user->getName(),
         ]);
     }
-}, ['type' => PropertyChangeset::CHANGESET_ITERABLE]);
+});
 ```
 
 ## Installation

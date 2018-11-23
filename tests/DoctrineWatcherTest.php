@@ -26,8 +26,14 @@ final class DoctrineWatcherTest extends TestCase
     {
         $watcher = new DoctrineWatcher();
         $name = null;
-        $watcher->watch(User::class, 'name', function (PropertyChangeset $changeset) use (&$name) {
+        $operationType = null;
+        $entity = null;
+        $property = null;
+        $watcher->watch(User::class, 'name', function (PropertyChangeset $changeset, $_operationType, $_entity, $_property) use (&$name, &$operationType, &$entity, &$property) {
             $name = $changeset->getNewValue();
+            $operationType = $_operationType;
+            $entity = $_entity;
+            $property = $_property;
         });
         $this->getEventManager()->addEventSubscriber($watcher);
         $user = new User();
@@ -35,6 +41,9 @@ final class DoctrineWatcherTest extends TestCase
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
         $this->assertEquals('foo', $name);
+        $this->assertEquals(PropertyChangeset::INSERT, $operationType);
+        $this->assertInstanceOf(User::class, $entity);
+        $this->assertEquals('name', $property);
     }
 
     /**
@@ -83,17 +92,32 @@ final class DoctrineWatcherTest extends TestCase
     {
         $watcher = new DoctrineWatcher();
         $name = null;
-        $watcher->watch(User::class, 'name', function (PropertyChangeset $changeset) use (&$name) {
+        $operationType = null;
+        $entity = null;
+        $property = null;
+        $watcher->watch(User::class, 'name', function (PropertyChangeset $changeset, $_operationType, $_entity, $_property) use (&$name, &$operationType, &$entity, &$property) {
             $name = $changeset->getNewValue();
+            $operationType = $_operationType;
+            $entity = $_entity;
+            $property = $_property;
         });
         $this->getEventManager()->addEventSubscriber($watcher);
         $user = new User();
         $user->setName('foo');
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
+        $this->assertEquals('foo', $name);
+        $this->assertEquals(PropertyChangeset::INSERT, $operationType);
+        $this->assertInstanceOf(User::class, $entity);
+        $this->assertEquals('name', $property);
+
+
         $user->setName('bar');
         $this->getEntityManager()->flush();
         $this->assertEquals('bar', $name);
+        $this->assertEquals(PropertyChangeset::UPDATE, $operationType);
+        $this->assertInstanceOf(User::class, $entity);
+        $this->assertEquals('name', $property);
     }
 
     /**

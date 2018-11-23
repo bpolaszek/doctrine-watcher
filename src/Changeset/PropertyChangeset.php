@@ -6,6 +6,8 @@ abstract class PropertyChangeset
 {
     public const CHANGESET_DEFAULT = 'scalar';
     public const CHANGESET_ITERABLE = 'iterable';
+    public const INSERT = 'insert';
+    public const UPDATE = 'update';
 
     /**
      * @var object

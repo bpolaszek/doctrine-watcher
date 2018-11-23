@@ -77,9 +77,25 @@ final class DoctrineWatcher implements EventSubscriber
             }
 
             $changeset = $this->changesetFactory->getChangeset($entity, $property, $unitOfWork, $classMetadata, $options['type']);
-            $callback($changeset);
+            $callback(
+                $changeset,
+                $this->changesetFactory->isNotManagedYet($entity, $unitOfWork) ? PropertyChangeset::INSERT : PropertyChangeset::UPDATE,
+                $entity,
+                $property
+            );
         };
         $this->listeners[$entityClass][$property][] = $listener;
+    }
+
+    /**
+     * @param string   $entityClass
+     * @param string   $property
+     * @param callable $callback
+     * @param array    $options
+     */
+    public function watchIterable(string $entityClass, string $property, callable $callback, array $options = []): void
+    {
+        $this->watch($entityClass, $property, $callback, ['type' => PropertyChangeset::CHANGESET_ITERABLE] + $options);
     }
 
     /**
