@@ -35,9 +35,9 @@ class ChangesetFactory
         $changeset = $this->getEntityChangeset($entity, $unitOfWork, $classMetadata)[$property] ?? [];
         switch ($type) {
             case PropertyChangeset::CHANGESET_ITERABLE:
-                return new IterablePropertyChangeset($entity, $property, ...$changeset);
+                return new IterablePropertyChangeset(...$changeset);
             case PropertyChangeset::CHANGESET_DEFAULT:
-                return new DefaultPropertyChangeset($entity, $property, ...$changeset);
+                return new DefaultPropertyChangeset(...$changeset);
         }
     }
 

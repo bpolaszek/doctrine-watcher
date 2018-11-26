@@ -2,8 +2,8 @@
 
 namespace BenTools\DoctrineWatcher\Watcher;
 
-use BenTools\DoctrineWatcher\Changeset\PropertyChangeset;
 use BenTools\DoctrineWatcher\Changeset\ChangesetFactory;
+use BenTools\DoctrineWatcher\Changeset\PropertyChangeset;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\Event\LifecycleEventArgs;
@@ -53,37 +53,7 @@ final class DoctrineWatcher implements EventSubscriber
     public function watch(string $entityClass, string $property, callable $callback, array $options = []): void
     {
         $options = $options + $this->defaulOptions;
-        $listener = function (LifecycleEventArgs $eventArgs) use ($entityClass, $property, $callback, $options) {
-            $em = $eventArgs->getEntityManager();
-            $unitOfWork = $em->getUnitOfWork();
-            $entity = $eventArgs->getEntity();
-
-            // Do not trigger on the wrong entity
-            if (!$entity instanceof $entityClass) {
-                return;
-            }
-
-            // Do not trigger if entity was not managed
-            if (false === $options['trigger_on_persist'] && $this->changesetFactory->isNotManagedYet($entity, $unitOfWork)) {
-                return;
-            }
-
-            // Do not trigger if field has no changes
-            $className = ClassUtils::getClass($entity);
-            $classMetadata = $em->getClassMetadata($className);
-            $changedProperties = $this->changesetFactory->getChangedProperties($entity, $unitOfWork, $classMetadata);
-            if (!in_array($property, $changedProperties) && false === $options['trigger_when_no_changes']) {
-                return;
-            }
-
-            $changeset = $this->changesetFactory->getChangeset($entity, $property, $unitOfWork, $classMetadata, $options['type']);
-            $callback(
-                $changeset,
-                $this->changesetFactory->isNotManagedYet($entity, $unitOfWork) ? PropertyChangeset::INSERT : PropertyChangeset::UPDATE,
-                $entity,
-                $property
-            );
-        };
+        $listener = $this->createPropertyListener($entityClass, $property, $callback, $options);
         $this->listeners[$entityClass][$property][] = $listener;
     }
 
@@ -99,15 +69,58 @@ final class DoctrineWatcher implements EventSubscriber
     }
 
     /**
-     * @param LifecycleEventArgs $eventArgs
+     * @param string   $entityClass
+     * @param string   $property
+     * @param callable $callback
+     * @param array    $options
+     * @return callable
      */
-    private function trigger(LifecycleEventArgs $eventArgs): void
+    private function createPropertyListener(string $entityClass, string $property, callable $callback, array $options = []): callable
+    {
+        return function (LifecycleEventArgs $eventArgs, string $operationType) use ($entityClass, $property, $callback, $options) {
+            $em = $eventArgs->getEntityManager();
+            $unitOfWork = $em->getUnitOfWork();
+            $entity = $eventArgs->getEntity();
+
+            // Do not trigger on the wrong entity
+            if (!$entity instanceof $entityClass) {
+                return;
+            }
+
+            // Do not trigger if entity was not managed
+            if (false === $options['trigger_on_persist'] && PropertyChangeset::INSERT === $operationType) {
+                return;
+            }
+
+            // Do not trigger if field has no changes
+            $className = ClassUtils::getClass($entity);
+            $classMetadata = $em->getClassMetadata($className);
+            $changedProperties = $this->changesetFactory->getChangedProperties($entity, $unitOfWork, $classMetadata);
+            if (!in_array($property, $changedProperties) && false === $options['trigger_when_no_changes']) {
+                return;
+            }
+
+            $changeset = $this->changesetFactory->getChangeset($entity, $property, $unitOfWork, $classMetadata, $options['type']);
+            $callback(
+                $changeset,
+                $operationType,
+                $entity,
+                $property
+            );
+        };
+    }
+
+    /**
+     * @param LifecycleEventArgs $eventArgs
+     * @param string             $operationType
+     */
+    private function trigger(LifecycleEventArgs $eventArgs, string $operationType): void
     {
         $entity = $eventArgs->getEntity();
         $class = ClassUtils::getClass($entity);
         foreach ($this->listeners[$class] ?? [] as $property => $listeners) {
             foreach ($listeners as $listener) {
-                $listener($eventArgs);
+                $listener($eventArgs, $operationType);
             }
         }
     }
@@ -115,17 +128,17 @@ final class DoctrineWatcher implements EventSubscriber
     /**
      * @param LifecycleEventArgs $eventArgs
      */
-    public function prePersist(LifecycleEventArgs $eventArgs): void
+    public function postPersist(LifecycleEventArgs $eventArgs): void
     {
-        $this->trigger($eventArgs);
+        $this->trigger($eventArgs, PropertyChangeset::INSERT);
     }
 
     /**
      * @param LifecycleEventArgs $eventArgs
      */
-    public function preUpdate(LifecycleEventArgs $eventArgs): void
+    public function postUpdate(LifecycleEventArgs $eventArgs): void
     {
-        $this->trigger($eventArgs);
+        $this->trigger($eventArgs, PropertyChangeset::UPDATE);
     }
 
     /**
@@ -134,8 +147,8 @@ final class DoctrineWatcher implements EventSubscriber
     public function getSubscribedEvents()
     {
         return [
-            'prePersist',
-            'preUpdate',
+            'postPersist',
+            'postUpdate',
         ];
     }
 }

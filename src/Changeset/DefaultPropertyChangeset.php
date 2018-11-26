@@ -4,17 +4,13 @@ namespace BenTools\DoctrineWatcher\Changeset;
 
 final class DefaultPropertyChangeset extends PropertyChangeset
 {
-
     /**
      * DefaultChangeset constructor.
-     * @param object $entity
-     * @param string $property
      * @param null   $oldValue
      * @param null   $newValue
      */
-    public function __construct($entity, string $property, $oldValue = null, $newValue = null)
+    public function __construct($oldValue = null, $newValue = null)
     {
-        parent::__construct($entity, $property);
         $this->oldValue = $oldValue;
         $this->newValue = $newValue;
     }

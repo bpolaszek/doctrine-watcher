@@ -4,20 +4,10 @@ namespace BenTools\DoctrineWatcher\Changeset;
 
 abstract class PropertyChangeset
 {
-    public const CHANGESET_DEFAULT = 'scalar';
+    public const CHANGESET_DEFAULT = 'default';
     public const CHANGESET_ITERABLE = 'iterable';
     public const INSERT = 'insert';
     public const UPDATE = 'update';
-
-    /**
-     * @var object
-     */
-    protected $entity;
-
-    /**
-     * @var string
-     */
-    protected $property;
 
     /**
      * @var mixed
@@ -39,35 +29,8 @@ abstract class PropertyChangeset
      */
     protected $removals = [];
 
-    /**
-     * Changeset constructor.
-     * @param object $entity
-     * @param string $property
-     */
-    public function __construct($entity, string $property)
-    {
-        $this->entity = $entity;
-        $this->property = $property;
-    }
-
 
     abstract public function getType(): string;
-
-    /**
-     * @return object
-     */
-    public function getEntity()
-    {
-        return $this->entity;
-    }
-
-    /**
-     * @return string
-     */
-    public function getProperty(): string
-    {
-        return $this->property;
-    }
 
     /**
      * @return mixed

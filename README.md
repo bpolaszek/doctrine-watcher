@@ -80,7 +80,7 @@ $watcher->watchIterable(User::class, 'roles', function (
 PHP7.1+ is required.
 
 ```bash
-composer require bentools/doctrine-watcher:1.0.x-dev
+composer require bentools/doctrine-watcher:0.2.*
 ```
 
 ## Tests
@@ -111,7 +111,7 @@ $watcher->watch(Entity::class, 'property', $callable, ['trigger_when_no_changes'
 
 ### When are the callback triggered?
 
-On `prePersist` and `preUpdate` events.
+On `postPersist` and `postUpdate` events.
 
 ## License
 

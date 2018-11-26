@@ -7,15 +7,11 @@ final class IterablePropertyChangeset extends PropertyChangeset
 
     /**
      * IterableChangeset constructor.
-     * @param object        $entity
-     * @param string        $property
      * @param iterable|null $oldValue
      * @param iterable|null $newValue
      */
-    public function __construct($entity, string $property, ?iterable $oldValue = null, ?iterable $newValue = null)
+    public function __construct(?iterable $oldValue = null, ?iterable $newValue = null)
     {
-        parent::__construct($entity, $property);
-
         $this->oldValue = $oldValue;
         $this->newValue = $newValue;
 
