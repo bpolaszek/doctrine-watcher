@@ -11,8 +11,8 @@ use Doctrine\ORM\Event\LifecycleEventArgs;
 final class DoctrineWatcher implements EventSubscriber
 {
     public const DEFAULT_OPTIONS = [
-        'trigger_on_persist'   => true,
-        'trigger_when_no_changes' => true,
+        'trigger_on_persist'   => false,
+        'trigger_when_no_changes' => false,
         'type'    => PropertyChangeset::CHANGESET_DEFAULT
     ];
 

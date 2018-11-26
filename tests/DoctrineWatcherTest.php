@@ -22,9 +22,36 @@ final class DoctrineWatcherTest extends TestCase
     /**
      * @test
      */
-    public function it_does_something_on_persist()
+    public function it_does_nothing_on_persist()
     {
         $watcher = new DoctrineWatcher();
+        $name = null;
+        $operationType = null;
+        $entity = null;
+        $property = null;
+        $watcher->watch(User::class, 'name', function (PropertyChangeset $changeset, $_operationType, $_entity, $_property) use (&$name, &$operationType, &$entity, &$property) {
+            $name = $changeset->getNewValue();
+            $operationType = $_operationType;
+            $entity = $_entity;
+            $property = $_property;
+        });
+        $this->getEventManager()->addEventSubscriber($watcher);
+        $user = new User();
+        $user->setName('foo');
+        $this->getEntityManager()->persist($user);
+        $this->getEntityManager()->flush();
+        $this->assertNull($name);
+        $this->assertNull($operationType);
+        $this->assertNull($entity);
+        $this->assertNull($property);
+    }
+
+    /**
+     * @test
+     */
+    public function it_does_something_on_persist()
+    {
+        $watcher = new DoctrineWatcher(['trigger_on_persist' => true]);
         $name = null;
         $operationType = null;
         $entity = null;
@@ -51,7 +78,7 @@ final class DoctrineWatcherTest extends TestCase
      */
     public function it_maps_on_the_correct_property()
     {
-        $watcher = new DoctrineWatcher();
+        $watcher = new DoctrineWatcher(['trigger_on_persist' => true]);
         $name = null;
         $watcher->watch(User::class, 'title', function (PropertyChangeset $changeset) use (&$name) {
             $name = $changeset->getNewValue();
@@ -69,7 +96,7 @@ final class DoctrineWatcherTest extends TestCase
      */
     public function it_can_handle_several_listeners()
     {
-        $watcher = new DoctrineWatcher();
+        $watcher = new DoctrineWatcher(['trigger_on_persist' => true]);
         $name = null;
         $watcher->watch(User::class, 'name', function (PropertyChangeset $changeset) use (&$name) {
             $name = $changeset->getNewValue();
@@ -90,7 +117,7 @@ final class DoctrineWatcherTest extends TestCase
      */
     public function it_does_something_on_update()
     {
-        $watcher = new DoctrineWatcher();
+        $watcher = new DoctrineWatcher(['trigger_on_persist' => true]);
         $name = null;
         $operationType = null;
         $entity = null;
@@ -123,37 +150,13 @@ final class DoctrineWatcherTest extends TestCase
     /**
      * @test
      */
-    public function it_does_something_when_nothing_changes()
-    {
-        $watcher = new DoctrineWatcher();
-        $called = false;
-        $watcher->watch(User::class, 'name', function (PropertyChangeset $changeset) use (&$called) {
-            $called = true;
-        });
-        $this->getEventManager()->addEventSubscriber($watcher);
-
-        $user = new User();
-        $user->setName('foo');
-        $this->getEntityManager()->persist($user);
-        $this->getEntityManager()->flush();
-        $this->assertTrue($called);
-
-        $called = false;
-        $user->setTitle('bar');
-        $this->getEntityManager()->flush();
-        $this->assertTrue($called);
-    }
-
-    /**
-     * @test
-     */
     public function it_does_nothing_when_nothing_changes()
     {
         $watcher = new DoctrineWatcher();
         $called = false;
         $watcher->watch(User::class, 'name', function (PropertyChangeset $changeset) use (&$called) {
             $called = true;
-        }, ['trigger_when_no_changes' => false]);
+        }, ['trigger_on_persist' => true, 'trigger_when_no_changes' => false]);
         $this->getEventManager()->addEventSubscriber($watcher);
 
         $user = new User();
@@ -171,7 +174,31 @@ final class DoctrineWatcherTest extends TestCase
     /**
      * @test
      */
-    public function it_does_nothing_on_persist()
+    public function it_does_something_when_nothing_changes()
+    {
+        $watcher = new DoctrineWatcher();
+        $called = false;
+        $watcher->watch(User::class, 'name', function (PropertyChangeset $changeset) use (&$called) {
+            $called = true;
+        }, ['trigger_on_persist' => true, 'trigger_when_no_changes' => true]);
+        $this->getEventManager()->addEventSubscriber($watcher);
+
+        $user = new User();
+        $user->setName('foo');
+        $this->getEntityManager()->persist($user);
+        $this->getEntityManager()->flush();
+        $this->assertTrue($called);
+
+        $called = false;
+        $user->setTitle('bar');
+        $this->getEntityManager()->flush();
+        $this->assertTrue($called);
+    }
+
+    /**
+     * @test
+     */
+    public function it_does_nothing_on_persist_but_it_does_something_on_update()
     {
         $watcher = new DoctrineWatcher();
         $called = false;
@@ -221,7 +248,7 @@ final class DoctrineWatcherTest extends TestCase
      */
     public function i_can_enable_iterable_changeset()
     {
-        $watcher = new DoctrineWatcher();
+        $watcher = new DoctrineWatcher(['trigger_on_persist' => true]);
         $changeset = null;
         $watcher->watch(User::class, 'roles', function (PropertyChangeset $_changeset) use (&$changeset) {
             $changeset = $_changeset;

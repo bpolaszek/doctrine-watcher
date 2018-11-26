@@ -89,24 +89,24 @@ composer require bentools/doctrine-watcher:0.2.*
 
 ## F.A.Q.
 
-### How do I ignore changesets on insertions?
+### Can I also trigger callable on insertions ?
 
 ```php
-$watcher = new DoctrineWatcher(['trigger_on_persist' => false]); // Will be default config
+$watcher = new DoctrineWatcher(['trigger_on_persist' => true]); // Will be default config
 ```
 or 
 ```php
-$watcher->watch(Entity::class, 'property', $callable, ['trigger_on_persist' => false]); // Will apply on this watcher only
+$watcher->watch(Entity::class, 'property', $callable, ['trigger_on_persist' => true]); // Will apply on this watcher only
 ```
 
-### How do I don't trigger anything when there are no changes?
+### How do I trigger something even when there are no changes?
 
 ```php
-$watcher = new DoctrineWatcher(['trigger_when_no_changes' => false]); // Will be default config
+$watcher = new DoctrineWatcher(['trigger_when_no_changes' => true]); // Will be default config
 ```
 or 
 ```php
-$watcher->watch(Entity::class, 'property', $callable, ['trigger_when_no_changes' => false]); // Will apply on this watcher only
+$watcher->watch(Entity::class, 'property', $callable, ['trigger_when_no_changes' => true]); // Will apply on this watcher only
 ```
 
 ### When are the callback triggered?
