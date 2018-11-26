@@ -23,12 +23,12 @@ final class IterablePropertyChangeset extends PropertyChangeset
         $new = iterable_to_array($newValue ?? []);
 
         if (!$this->isSequential($old) && !$this->isSequential($new)) {
-            $this->additions = array_diff($new, $old);
-            $this->removals = array_diff($old, $new);
+            $this->additions = $this->diff($new, $old);
+            $this->removals = $this->diff($old, $new);
             return;
         }
-        $this->additions = array_values(array_diff($new, $old));
-        $this->removals = array_values(array_diff($old, $new));
+        $this->additions = array_values($this->diff($new, $old));
+        $this->removals = array_values($this->diff($old, $new));
     }
 
     /**
@@ -54,5 +54,17 @@ final class IterablePropertyChangeset extends PropertyChangeset
     private function isSequential(array $array): bool
     {
         return isset($array[0]) && array_keys($array) === range(0, count($array) - 1);
+    }
+
+    /**
+     * @param array $a
+     * @param array $b
+     * @return array
+     */
+    private function diff(array $a, array $b): array
+    {
+        return array_filter($a, function ($item) use ($b) {
+            return !in_array($item, $b, true);
+        });
     }
 }
