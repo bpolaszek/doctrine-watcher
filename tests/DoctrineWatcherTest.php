@@ -3,7 +3,6 @@
 namespace BenTools\DoctrineWatcher\Tests;
 
 use BenTools\DoctrineWatcher\Changeset\PropertyChangeset;
-use BenTools\DoctrineWatcher\Changeset\IterablePropertyChangeset;
 use BenTools\DoctrineWatcher\Tests\Entity\Employee;
 use BenTools\DoctrineWatcher\Tests\Entity\User;
 use BenTools\DoctrineWatcher\Watcher\DoctrineWatcher;
@@ -252,7 +251,7 @@ final class DoctrineWatcherTest extends TestCase
         $changeset = null;
         $watcher->watch(User::class, 'roles', function (PropertyChangeset $_changeset) use (&$changeset) {
             $changeset = $_changeset;
-        }, ['type' => PropertyChangeset::CHANGESET_ITERABLE]);
+        });
         $this->getEventManager()->addEventSubscriber($watcher);
 
 
@@ -262,8 +261,8 @@ final class DoctrineWatcherTest extends TestCase
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
 
-        /** @var IterablePropertyChangeset $changeset */
-        $this->assertInstanceOf(IterablePropertyChangeset::class, $changeset);
+        /** @var PropertyChangeset $changeset */
+        $this->assertInstanceOf(PropertyChangeset::class, $changeset);
         $this->assertTrue($changeset->hasAdditions());
         $this->assertFalse($changeset->hasRemovals());
         $this->assertEquals(['foo', 'bar'], $changeset->getAdditions());

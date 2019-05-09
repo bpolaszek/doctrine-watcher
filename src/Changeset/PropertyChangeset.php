@@ -2,10 +2,8 @@
 
 namespace BenTools\DoctrineWatcher\Changeset;
 
-abstract class PropertyChangeset
+class PropertyChangeset
 {
-    public const CHANGESET_DEFAULT = 'default';
-    public const CHANGESET_ITERABLE = 'iterable';
     public const INSERT = 'insert';
     public const UPDATE = 'update';
 
@@ -22,15 +20,24 @@ abstract class PropertyChangeset
     /**
      * @var array
      */
-    protected $additions = [];
+    protected $additions;
 
     /**
      * @var array
      */
-    protected $removals = [];
+    protected $removals;
 
-
-    abstract public function getType(): string;
+    /**
+     * PropertyChangeset constructor.
+     *
+     * @param mixed $newValue
+     * @param mixed $oldValue
+     */
+    public function __construct($oldValue = null, $newValue = null)
+    {
+        $this->newValue = $newValue;
+        $this->oldValue = $oldValue;
+    }
 
     /**
      * @return mixed
@@ -61,9 +68,12 @@ abstract class PropertyChangeset
      */
     public function getAdditions(): iterable
     {
-        if (self::CHANGESET_ITERABLE !== $this->getType()) {
+        if (!$this->canBeComparedAsIterables()) {
             throw new \RuntimeException(sprintf('%s can only be called on iterable properties changesets.', __METHOD__));
         }
+
+        $this->computeAdditionsAndRemovals();
+
         return $this->additions;
     }
 
@@ -72,9 +82,12 @@ abstract class PropertyChangeset
      */
     public function getRemovals(): iterable
     {
-        if (self::CHANGESET_ITERABLE !== $this->getType()) {
+        if (!$this->canBeComparedAsIterables()) {
             throw new \RuntimeException(sprintf('%s can only be called on iterable properties changesets.', __METHOD__));
         }
+
+        $this->computeAdditionsAndRemovals();
+
         return $this->removals;
     }
 
@@ -83,9 +96,12 @@ abstract class PropertyChangeset
      */
     public function hasAdditions(): bool
     {
-        if (self::CHANGESET_ITERABLE !== $this->getType()) {
+        if (!$this->canBeComparedAsIterables()) {
             throw new \RuntimeException(sprintf('%s can only be called on iterable properties changesets.', __METHOD__));
         }
+
+        $this->computeAdditionsAndRemovals();
+
         return [] !== $this->additions;
     }
 
@@ -94,9 +110,73 @@ abstract class PropertyChangeset
      */
     public function hasRemovals(): bool
     {
-        if (self::CHANGESET_ITERABLE !== $this->getType()) {
+        if (!$this->canBeComparedAsIterables()) {
             throw new \RuntimeException(sprintf('%s can only be called on iterable properties changesets.', __METHOD__));
         }
+
+        $this->computeAdditionsAndRemovals();
+
         return [] !== $this->removals;
+    }
+
+    /**
+     * @param $value
+     * @return bool
+     */
+    private function isNullOrIterable($value): bool
+    {
+        return null === $value || \is_iterable($value);
+    }
+
+    /**
+     * @param $oldValue
+     * @param $newValue
+     * @return bool
+     */
+    private function canBeComparedAsIterables(): bool
+    {
+        return $this->isNullOrIterable($this->oldValue) && $this->isNullOrIterable($this->newValue);
+    }
+
+    /**
+     *
+     */
+    private function computeAdditionsAndRemovals(): void
+    {
+        if (null !== $this->additions) {
+            return;
+        }
+
+        $old = iterable_to_array($this->oldValue ?? []);
+        $new = iterable_to_array($this->newValue ?? []);
+
+        if (!$this->isSequential($old) && !$this->isSequential($new)) {
+            $this->additions = $this->diff($new, $old);
+            $this->removals = $this->diff($old, $new);
+            return;
+        }
+        $this->additions = \array_values($this->diff($new, $old));
+        $this->removals = \array_values($this->diff($old, $new));
+    }
+
+    /**
+     * @param array $array
+     * @return bool
+     */
+    private function isSequential(array $array): bool
+    {
+        return isset($array[0]) && \array_keys($array) === \range(0, \count($array) - 1);
+    }
+
+    /**
+     * @param array $a
+     * @param array $b
+     * @return array
+     */
+    private function diff(array $a, array $b): array
+    {
+        return \array_filter($a, function ($item) use ($b) {
+            return !\in_array($item, $b, true);
+        });
     }
 }

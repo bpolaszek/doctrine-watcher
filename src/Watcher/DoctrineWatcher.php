@@ -13,7 +13,6 @@ final class DoctrineWatcher implements EventSubscriber
     public const DEFAULT_OPTIONS = [
         'trigger_on_persist'   => false,
         'trigger_when_no_changes' => false,
-        'type'    => PropertyChangeset::CHANGESET_DEFAULT
     ];
 
     /**
@@ -40,7 +39,7 @@ final class DoctrineWatcher implements EventSubscriber
         array $options = self::DEFAULT_OPTIONS,
         ChangesetFactory $changesetFactory = null
     ) {
-        $this->defaulOptions = $options + self::DEFAULT_OPTIONS;
+        $this->defaulOptions = \array_replace(self::DEFAULT_OPTIONS, $options);
         $this->changesetFactory = $changesetFactory ?? new ChangesetFactory();
     }
 
@@ -52,7 +51,7 @@ final class DoctrineWatcher implements EventSubscriber
      */
     public function watch(string $entityClass, string $property, callable $callback, array $options = []): void
     {
-        $options = $options + $this->defaulOptions;
+        $options = \array_replace($this->defaulOptions, $options);
         $listener = $this->createPropertyListener($entityClass, $property, $callback, $options);
         $this->listeners[$entityClass][$property][] = $listener;
     }
@@ -65,7 +64,8 @@ final class DoctrineWatcher implements EventSubscriber
      */
     public function watchIterable(string $entityClass, string $property, callable $callback, array $options = []): void
     {
-        $this->watch($entityClass, $property, $callback, ['type' => PropertyChangeset::CHANGESET_ITERABLE] + $options);
+        \trigger_error(\sprintf('%s is deprecated as it is now an alias of %s.', __METHOD__, strtr(__METHOD__, ['watchIterable' => 'watch'])), \E_USER_DEPRECATED);
+        $this->watch($entityClass, $property, $callback, $options);
     }
 
     /**
@@ -96,11 +96,11 @@ final class DoctrineWatcher implements EventSubscriber
             $className = ClassUtils::getClass($entity);
             $classMetadata = $em->getClassMetadata($className);
             $changedProperties = $this->changesetFactory->getChangedProperties($entity, $unitOfWork, $classMetadata);
-            if (!in_array($property, $changedProperties) && false === $options['trigger_when_no_changes']) {
+            if (!\in_array($property, $changedProperties) && false === $options['trigger_when_no_changes']) {
                 return;
             }
 
-            $changeset = $this->changesetFactory->getChangeset($entity, $property, $unitOfWork, $classMetadata, $options['type']);
+            $changeset = $this->changesetFactory->getChangeset($entity, $property, $unitOfWork, $classMetadata);
             $callback(
                 $changeset,
                 $operationType,

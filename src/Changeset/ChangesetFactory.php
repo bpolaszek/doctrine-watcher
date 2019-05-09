@@ -15,7 +15,7 @@ class ChangesetFactory
      */
     public function getChangedProperties($entity, UnitOfWork $unitOfWork, ClassMetadata $classMetadata): array
     {
-        return array_keys($this->getEntityChangeset($entity, $unitOfWork, $classMetadata));
+        return \array_keys($this->getEntityChangeset($entity, $unitOfWork, $classMetadata));
     }
 
     /**
@@ -23,22 +23,13 @@ class ChangesetFactory
      * @param string        $property
      * @param UnitOfWork    $unitOfWork
      * @param ClassMetadata $classMetadata
-     * @param string        $type
      * @return PropertyChangeset
      * @throws \InvalidArgumentException
      */
-    public function getChangeset($entity, string $property, UnitOfWork $unitOfWork, ClassMetadata $classMetadata, string $type = PropertyChangeset::CHANGESET_DEFAULT): PropertyChangeset
+    public function getChangeset($entity, string $property, UnitOfWork $unitOfWork, ClassMetadata $classMetadata): PropertyChangeset
     {
-        if (!in_array($type, [PropertyChangeset::CHANGESET_DEFAULT, PropertyChangeset::CHANGESET_ITERABLE])) {
-            throw new \InvalidArgumentException(sprintf('Expected "%s" or "%s", got %s', PropertyChangeset::CHANGESET_DEFAULT, PropertyChangeset::CHANGESET_ITERABLE, $type));
-        }
         $changeset = $this->getEntityChangeset($entity, $unitOfWork, $classMetadata)[$property] ?? [];
-        switch ($type) {
-            case PropertyChangeset::CHANGESET_ITERABLE:
-                return new IterablePropertyChangeset(...$changeset);
-            case PropertyChangeset::CHANGESET_DEFAULT:
-                return new DefaultPropertyChangeset(...$changeset);
-        }
+        return new PropertyChangeset(...$changeset);
     }
 
     /**
@@ -60,7 +51,7 @@ class ChangesetFactory
             $changeset[$fieldName][] = $classMetadata->getReflectionClass()->getDefaultProperties()[$fieldName] ?? null;
             $changeset[$fieldName][] = $reflectionProperty->getValue($entity);
         }
-        $changeset = array_filter($changeset, function ($changes) {
+        $changeset = \array_filter($changeset, function ($changes) {
             list($old, $new) = $changes;
             return $old !== $new;
         });
@@ -77,7 +68,7 @@ class ChangesetFactory
     public function hasChanges($entity, string $property, UnitOfWork $unitOfWork, ClassMetadata $classMetadata): bool
     {
         $changeset = $this->getEntityChangeSet($entity, $unitOfWork, $classMetadata);
-        return array_key_exists($property, $changeset);
+        return \array_key_exists($property, $changeset);
     }
 
     /**

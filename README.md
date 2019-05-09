@@ -49,7 +49,7 @@ $watcher->watch(User::class, 'email', function (
 /**
  * Watch for changes on the $roles property for the User class
  */
-$watcher->watchIterable(User::class, 'roles', function (
+$watcher->watch(User::class, 'roles', function (
     PropertyChangeset $changeset, 
     string $operationType, 
     User $user
@@ -92,7 +92,7 @@ composer require bentools/doctrine-watcher:0.2.*
 ### Can I also trigger callable on insertions ?
 
 ```php
-$watcher = new DoctrineWatcher(['trigger_on_persist' => true]); // Will be default config
+$watcher = new DoctrineWatcher(['trigger_on_persist' => true]); // Will be default config for all watchers
 ```
 or 
 ```php
