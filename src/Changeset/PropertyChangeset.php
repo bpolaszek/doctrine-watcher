@@ -2,7 +2,7 @@
 
 namespace BenTools\DoctrineWatcher\Changeset;
 
-class PropertyChangeset
+final class PropertyChangeset
 {
     public const INSERT = 'insert';
     public const UPDATE = 'update';
@@ -60,6 +60,10 @@ class PropertyChangeset
      */
     public function hasChanges(): bool
     {
+        if ($this->canBeComparedAsIterables()) {
+            return $this->hasAdditions() || $this->hasRemovals();
+        }
+
         return $this->oldValue !== $this->newValue;
     }
 

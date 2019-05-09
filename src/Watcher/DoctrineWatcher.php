@@ -11,7 +11,7 @@ use Doctrine\ORM\Event\LifecycleEventArgs;
 final class DoctrineWatcher implements EventSubscriber
 {
     public const DEFAULT_OPTIONS = [
-        'trigger_on_persist'   => false,
+        'trigger_on_persist'      => false,
         'trigger_when_no_changes' => false,
     ];
 
@@ -32,6 +32,7 @@ final class DoctrineWatcher implements EventSubscriber
 
     /**
      * DoctrineWatcher constructor.
+     *
      * @param array                 $options
      * @param ChangesetFactory|null $changesetFactory
      */
@@ -45,12 +46,24 @@ final class DoctrineWatcher implements EventSubscriber
 
     /**
      * @param string   $entityClass
-     * @param string   $property
+     * @param          $property
      * @param callable $callback
      * @param array    $options
+     * @throws \InvalidArgumentException
      */
-    public function watch(string $entityClass, string $property, callable $callback, array $options = []): void
+    public function watch(string $entityClass, $property, callable $callback, array $options = []): void
     {
+        if (\is_array($property)) {
+            foreach ($property as $prop) {
+                $this->watch($entityClass, $prop, $callback, $options);
+            }
+            return;
+        }
+
+        if (!\is_string($property)) {
+            throw new \InvalidArgumentException(\sprintf('Expected property, got %s.', \is_object($property) ? \get_class($property) : \gettype($property)));
+        }
+
         $options = \array_replace($this->defaulOptions, $options);
         $listener = $this->createPropertyListener($entityClass, $property, $callback, $options);
         $this->listeners[$entityClass][$property][] = $listener;
