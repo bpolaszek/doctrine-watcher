@@ -116,3 +116,6 @@ On `postPersist` and `postUpdate` events.
 ## License
 
 MIT
+
+## See also
+[bentools/doctrine-watcher-bundle](https://github.com/bpolaszek/doctrine-watcher-bundle) - A Symfony Bundle for this library
